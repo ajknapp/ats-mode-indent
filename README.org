@@ -1,0 +1,10 @@
+#+TITLE: Temporary ATS Mode Repository
+#+AUTHOR: Andrew Knapp
+
+This is a temporary hosting place for my version of ATS mode.
+
+I've added mostly functional smart indentation by cannibalizing sml.el.
+The only problem I've found after a few months of sporadic use is excessive indentation after ending a function without a semicolon.
+The code indents way too far to the right, but this can be fixed by terminating functions with a semicolon.
+
+Maybe someone who knows more about grammars can fix this (my background is in mathematics.)
