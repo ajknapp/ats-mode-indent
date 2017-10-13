@@ -332,7 +332,10 @@
     "absvtype"
     "absviewtype"
     "absvt0ype"
-    "absviewt0ype"))
+    "absviewt0ype"
+    "sortdef"
+    "staload"
+    ))
 
 (defun wrap-special-keyword (w)
   (concat "\\" w "\\>"))
@@ -472,11 +475,14 @@
 	      (decls "prval" decls)
 	      (decls "var" decls)
 	      (decls "val" decls)
+	      (decls "assume" decls)
 	      (decls "primplmnt" decls)
 	      (decls "primplement" decls)
-        (decls "extern" decls)
+	      (decls "extern" decls)
 	      (decls "implmnt" decls)
 	      (decls "implement" decls)
+	      (decls "sortdef" decls)
+	      (decls "staload" decls)
 	      )
        (type (type "->" type)
              (type "*" type))
@@ -496,48 +502,52 @@
      '(;; (assoc "implement" "val" "fun" "type" "datatype" "abstype" "open" "infix" "infixr" "infixl"
        ;;        "nonfix" "functor" "signature" "structure" "exception"
        ;;        "include" "sharing" "local")
-       (assoc "implement"
-	      "implmnt"
+       (assoc
+        "staload"
+	"sortdef"
+        "implement"
+	"implmnt"
         "extern"
-	      "primplement"
-	      "primplmnt"
-	      "val"
-	      "var"
-	      "prval"
-	      "prvar"
-	      "fn"
-	      "fnx"
-	      "fun"
-	      "prfn"
-	      "prfun"
-	      "praxi"
-	      "typedef"
-	      "propdef"
-	      "viewdef"
-	      "vtypedef"
-	      "viewtypedef"
-	      "tkindef"
-	      "type"
-	      "datatype"
-	      "dataprop"
-	      "dataview"
-	      "datavtype"
-	      "dataviewtype"
-	      "abstype"
-	      "abst0ype"
-	      "absprop"
-	      "absview"
-	      "absvtype"
-	      "absviewtype"
-	      "absvt0ype"
-	      "absviewt0ype"
-	      "infix"
-	      "infixr"
-	      "infixl"
-	      "prefix"
-	      "suffix"
-	      "nonfix"
-	      "exception")
+	"primplement"
+	"primplmnt"
+	"assume"
+	"val"
+	"var"
+	"prval"
+	"prvar"
+	"fn"
+	"fnx"
+	"fun"
+	"prfn"
+	"prfun"
+	"praxi"
+	"typedef"
+	"propdef"
+	"viewdef"
+	"vtypedef"
+	"viewtypedef"
+	"tkindef"
+	"type"
+	"datatype"
+	"dataprop"
+	"dataview"
+	"datavtype"
+	"dataviewtype"
+	"abstype"
+	"abst0ype"
+	"absprop"
+	"absview"
+	"absvtype"
+	"absviewtype"
+	"absvt0ype"
+	"absviewt0ype"
+	"infix"
+	"infixr"
+	"infixl"
+	"prefix"
+	"suffix"
+	"nonfix"
+	"exception")
        (assoc "withtype")
        (assoc "and"))
      '((assoc "orelse") (assoc "andalso") (nonassoc ":"))
@@ -582,9 +592,15 @@
   (pcase (cons kind token)
     (`(:elem . basic) ats-indent-separator-outdent)
     (`(:elem . args)  ats-indent-args)
+    (`(:elem . empty-line-token) t)
+    (`(:list-intro . "fun") t)
     (`(:list-intro . "lam") t)
     (`(:list-intro . "llam") t)
+    (`(:list-intro . ";") t)
+    (`(:list-intro . nil) t)
+    (`(:close-all . "}") 0)
     (`(:close-all . ,_) t)
+    (`(:after . "end") 0)
     (`(:after . "begin") 2)
     (`(:after . "=>") (if (smie-rule-hanging-p) 0 2))
     (`(:after . "in") (if (smie-rule-parent-p "local") 0))
@@ -593,7 +609,7 @@
     (`(:after . "else") (if (smie-rule-hanging-p) 0)) ;; (:next "if" 0)
     (`(:after . ,(or `"|" `"d|" `";" `",")) (smie-rule-separator kind))
     (`(:after . "d=")
-     (if (and (smie-rule-parent-p "val") (smie-rule-next-p "fn")) -3))
+     (if (and (smie-rule-parent-p "val" "var" "sortdef") (smie-rule-next-p "fn" "fun")) -3))
     (`(:before . "=>") (if (smie-rule-parent-p "fn") 3))
     (`(:before . "of") 1)
     ;; FIXME: pcase in Emacs<24.4 bumps into a bug if we do this:
@@ -602,48 +618,78 @@
     (`(:before . ,(or `"|" `"d|" `";" `",")) (smie-rule-separator kind))
     ;; Treat purely syntactic block-constructs as being part of their parent,
     ;; when the opening statement is hanging.
-    (`(:before . ,(or `"let" `"(" `"[" `"{")) ; "struct"? "sig"?
-     (if (smie-rule-hanging-p) (smie-rule-parent)))
+    (`(:before . ,(or `"let")) (if (or
+                                    (smie-rule-parent-p "let"
+                                                        "if"
+                                                        "implement"
+                                                        "fun"
+                                                        "fn"
+                                                        "fnx"
+                                                        "val"
+                                                        "assume"
+                                                        "var"
+                                                        "prval"
+                                                        "prvar"
+                                                        "implement"
+                                                        "implmnt"
+                                                        "primplement"
+                                                        "primplmnt")
+                                    (smie-rule-hanging-p))
+                                   (smie-rule-parent)
+                                 2))
+    (`(:before . ,(or `"(" `"[" `"{")) ; "struct"? "sig"?
+     (if (smie-rule-hanging-p) (smie-rule-parent)
+       (if (smie-rule-prev-p "=of") 4 ats-indent-args)))
     ;; Treat if ... else if ... as a single long syntactic construct.
     ;; Similarly, treat fn a => fn b => ... as a single construct.
     (`(:before . ,(or `"if" `"fn"))
-     (and (not (smie-rule-bolp))
-          (smie-rule-prev-p (if (equal token "if") "else" "=>"))
-          (smie-rule-parent)))
+     (if
+         (and (not (smie-rule-bolp))
+              (smie-rule-prev-p (if (equal token "if") "else" "=>"))
+              (smie-rule-parent))
+         t (if (smie-rule-parent-p "fun" "fn" "fnx" "prfun" "prfn")
+               (smie-rule-parent)
+             (if (smie-rule-parent-p "let")
+                 nil (smie-rule-parent)))))
     (`(:before . "and")
      ;; FIXME: maybe "and" (c|sh)ould be handled as an smie-separator.
      (cond
       ((smie-rule-parent-p "datatype"
-			   "dataprop"
-			   "dataview"
-			   "datavtype"
-			   "dataviewtype"
-			   "withtype")
+                           "dataprop"
+                           "dataview"
+                           "datavtype"
+                           "dataviewtype"
+                           "withtype")
        (if (ats--rightalign-and-p) 5 0))
-      ((smie-rule-parent-p "fun"
-			   "fn"
-			   "fnx"
-			   "val"
-			   "var"
-			   "prval"
-			   "prvar"
-			   "implement"
-			   "implmnt"
-			   "primplement"
-			   "primplmnt"
-			   "praxi") 2)))
+      ((smie-rule-parent-p
+        "fun"
+        "fn"
+        "fnx"
+        "val"
+        "assume"
+        "var"
+        "prval"
+        "prvar"
+        "implement"
+        "implmnt"
+        "primplement"
+        "primplmnt"
+        "praxi"
+        )
+       2)))
     (`(:before . "withtype") 0)
     (`(:before . "d=")
      (cond
-      ((smie-rule-parent-p "datatype"
-			   "dataprop"
-			   "dataview"
-			   "datavtype"
-			   "dataviewtype") (if (smie-rule-bolp) 0 2))))
-      ;; ((smie-rule-parent-p "structure" "signature" "functor") 0)))
+      ((smie-rule-parent-p
+        "datatype"
+        "dataprop"
+        "dataview"
+        "datavtype"
+        "dataviewtype") (if (smie-rule-bolp) 0 2))))
+    ;; ((smie-rule-parent-p "structure" "signature" "functor") 0)))
     ;; Indent an expression starting with "local" as if it were starting
     ;; with "fun".
-    (`(:before . "local") (smie-indent-keyword "extern" "fun" "fn" "fnx" "prfun" "prfn" "praxi"))
+    (`(:before . "local") (smie-indent-keyword "fun"))
     ;; FIXME: type/val/fun/... are separators but "local" is not, even though
     ;; it appears in the same list.  Try to fix up the problem by hand.
     ;; ((or (equal token "local")
@@ -714,7 +760,7 @@ Assumes point is right before the | symbol."
            ;;   "infixr" "nonfix" "local" "val" "fun" "fn" "fnx" "prfun" "prfn" "praxi")
 	   (list
 	    "|" "of" "in" "datatype"
-	    "dataprop" "dataview" "datavtype" "dataviewtype" "and"
+	    "dataprop" "dataview" "datavtype" "dataviewtype" "and" "assume"
 	    "exception" "abstype" "abst0ype" "absprop" "absview"
 	    "absvtype" "absviewtype" "absvt0ype" "absviewt0ype" "infix"
 	    "infixr" "infixl" "prefix" "suffix" "nonfix" "local" "val"
@@ -722,11 +768,10 @@ Assumes point is right before the | symbol."
 	   ))
       (or (member (ats-smie-forward-token-1) after-type-def) ;Skip the tag.
           (member (ats-smie-forward-token-1) after-type-def)
-	  (progn			; if constructor has type-level args
-	    ;; (save-excursion (condition-case nil
-	    ;; 			(search-forward "of" (save-excursion (end-of-line)))
-	    ;; 		      (error nil)))
-	    (member (ats-smie-forward-token-1) after-type-def))))))
+          (condition-case nil
+              (search-forward "of" (save-excursion (end-of-line) (point)))
+            (error nil))
+          ))))
 
 (defun ats-smie-forward-token-1 ()
   (forward-comment (point-max))
