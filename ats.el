@@ -408,6 +408,7 @@
       ("lam" sexp "=>" exp))
        ;; "simple exp"s are the ones that can appear to the left of `handle'.
        (sexp (sexp ":" type) ("(" exps ")")
+             (".<" exp ">.")
              (sexp "orelse" sexp)
              (sexp "andalso" sexp))
        (cmds (cmds ";" cmds) (exp))
@@ -504,50 +505,50 @@
        ;;        "include" "sharing" "local")
        (assoc
         "staload"
-	"sortdef"
+        "sortdef"
         "implement"
-	"implmnt"
+        "implmnt"
         "extern"
-	"primplement"
-	"primplmnt"
-	"assume"
-	"val"
-	"var"
-	"prval"
-	"prvar"
-	"fn"
-	"fnx"
-	"fun"
-	"prfn"
-	"prfun"
-	"praxi"
-	"typedef"
-	"propdef"
-	"viewdef"
-	"vtypedef"
-	"viewtypedef"
-	"tkindef"
-	"type"
-	"datatype"
-	"dataprop"
-	"dataview"
-	"datavtype"
-	"dataviewtype"
-	"abstype"
-	"abst0ype"
-	"absprop"
-	"absview"
-	"absvtype"
-	"absviewtype"
-	"absvt0ype"
-	"absviewt0ype"
-	"infix"
-	"infixr"
-	"infixl"
-	"prefix"
-	"suffix"
-	"nonfix"
-	"exception")
+        "primplement"
+        "primplmnt"
+        "assume"
+        "val"
+        "var"
+        "prval"
+        "prvar"
+        "fn"
+        "fnx"
+        "fun"
+        "prfn"
+        "prfun"
+        "praxi"
+        "typedef"
+        "propdef"
+        "viewdef"
+        "vtypedef"
+        "viewtypedef"
+        "tkindef"
+        "type"
+        "datatype"
+        "dataprop"
+        "dataview"
+        "datavtype"
+        "dataviewtype"
+        "abstype"
+        "abst0ype"
+        "absprop"
+        "absview"
+        "absvtype"
+        "absviewtype"
+        "absvt0ype"
+        "absviewt0ype"
+        "infix"
+        "infixr"
+        "infixl"
+        "prefix"
+        "suffix"
+        "nonfix"
+        "exception")
        (assoc "withtype")
        (assoc "and"))
      '((assoc "orelse") (assoc "andalso") (nonassoc ":"))
@@ -610,7 +611,7 @@
     (`(:after . ,(or `"|" `"d|" `";" `",")) (smie-rule-separator kind))
     (`(:after . "d=")
      (if (and (smie-rule-parent-p "val" "var" "sortdef") (smie-rule-next-p "fn" "fun")) -3))
-    (`(:before . "=>") (if (smie-rule-parent-p "fn") 3))
+    (`(:before . "=>") (if (smie-rule-parent-p "fn") 3 ))
     (`(:before . "of") 1)
     ;; FIXME: pcase in Emacs<24.4 bumps into a bug if we do this:
     ;; (`(:before . ,(and `"|" (guard (smie-rule-prev-p "of")))) 1)
@@ -639,7 +640,7 @@
                                  2))
     (`(:before . ,(or `"(" `"[" `"{")) ; "struct"? "sig"?
      (if (smie-rule-hanging-p) (smie-rule-parent)
-       (if (smie-rule-prev-p "=of") 4 ats-indent-args)))
+       (if (smie-rule-prev-p "=of") 4 (smie-rule-parent))))
     ;; Treat if ... else if ... as a single long syntactic construct.
     ;; Similarly, treat fn a => fn b => ... as a single construct.
     (`(:before . ,(or `"if" `"fn"))
@@ -847,7 +848,7 @@ Assumes point is right before the | symbol."
 (define-derived-mode ats-mode fundamental-mode "ATS2"
   "Major mode to edit ATS2 source code."
   (set (make-local-variable 'font-lock-defaults)
-       '(ats-font-lock-keywords nil nil ((?_ . "w") (?= . "_") (?+ . "w") (?- . "w")) nil
+       '(ats-font-lock-keywords nil nil ((?_ . "w") (?= . "_") ) nil
          (font-lock-syntactic-keywords . ats-font-lock-syntactic-keywords)
          (font-lock-mark-block-function . ats-font-lock-mark-block)))
   (setq-local comment-start "(*")
