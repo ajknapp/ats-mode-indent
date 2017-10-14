@@ -643,20 +643,23 @@
                                                         "primplement"
                                                         "primplmnt")
                                     (smie-rule-hanging-p))
-                                   (smie-rule-parent)
+                                   (if (smie-rule-parent-p "if")
+                                       `(column . ,(+ 2 (cdr (smie-rule-parent))))
+                                     (smie-rule-parent)
+                                       )
                                  2))
     (`(:before . ,(or `"(" `"[" `"{")) ; "struct"? "sig"?
      (if (smie-rule-hanging-p) (smie-rule-parent)
        (if (smie-rule-prev-p "=of") 4 (smie-rule-parent))))
     ;; Treat if ... else if ... as a single long syntactic construct.
     ;; Similarly, treat fn a => fn b => ... as a single construct.
-    (`(:before . ,(or `"if" `"fn"))
+    (`(:before . ,(or `"if"))
      (if
          (and (not (smie-rule-bolp))
-              (smie-rule-prev-p (if (equal token "if") "else" "=>"))
+              (smie-rule-prev-p (if (equal token "if") "else" "=>") "d=")
               (smie-rule-parent))
          t (if (smie-rule-parent-p "fun" "fn" "fnx" "prfun" "prfn")
-               (smie-rule-parent)
+               `(column . ,(+ 2 (cdr (smie-rule-parent))))
              (if (smie-rule-parent-p "let")
                  nil (smie-rule-parent)))))
     (`(:before . "and")
