@@ -122,7 +122,7 @@
 
 (defface ats-font-lock-metric-face
   `(
-    (default :inherit font-lock-type-face)
+    (default :inherit font-lock-constant-face)
     ;; (t (:foreground ,(cdr (assoc "zenburn-orange" zenburn-colors-alist)) :weight bold))
     )
   "Face used for termination metrics."
@@ -610,7 +610,14 @@
     (`(:after . "else") (if (smie-rule-hanging-p) 0)) ;; (:next "if" 0)
     (`(:after . ,(or `"|" `"d|" `";" `",")) (smie-rule-separator kind))
     (`(:after . "d=")
-     (if (and (smie-rule-parent-p "val" "var" "sortdef") (smie-rule-next-p "fn" "fun")) -3))
+     (if (and (smie-rule-parent-p "prval" "val" "var")
+              (smie-rule-next-p "fn"
+                                "fun"
+                                "fnx"
+                                "prfn"
+                                "prfun"
+                                "implement"
+                                "implmnt")) -3))
     (`(:before . "=>") (if (smie-rule-parent-p "fn") 3 ))
     (`(:before . "of") 1)
     ;; FIXME: pcase in Emacs<24.4 bumps into a bug if we do this:
