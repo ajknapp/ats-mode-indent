@@ -1,6 +1,8 @@
 #+TITLE: Temporary ATS Mode Repository
 #+AUTHOR: Andrew Knapp
 
+* IMPORTANT: READ THIS BEFORE REPORTING BUGS
+
 This is a temporary hosting place for my version of ATS mode.
 
 I've added mostly functional smart indentation by cannibalizing sml.el.

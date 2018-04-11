@@ -88,6 +88,7 @@
     (modify-syntax-entry ?: "." st)
     (modify-syntax-entry ?= "." st)
     ;; (modify-syntax-entry ?@ "." st)  ; Already defined above.
+    (modify-syntax-entry ?@ "w" st)     ; necessary for abst@ype and friends
     (modify-syntax-entry ?~ "." st)
     ;; (modify-syntax-entry ?` "." st)  ; Already defined above.
     (modify-syntax-entry ?^ "." st)
@@ -277,11 +278,12 @@
     pt))
 
 (defvar ats-word-keywords
-  '("abstype" "abst0ype" "absprop" "absview" "absvtype" "absviewtype" "absvt0ype" "absviewt0ype"
+  '("abstype" "abst0ype" "abst@ype" "absprop" "absview" "absvtype" "absviewtype"
+    "absvt0ype" "absvt@ype" "absviewt0ype" "absviewt@ype"
     "and" "as" "assume" "begin" "break" "continue" "classdec" "datasort"
     "datatype" "dataprop" "dataview" "datavtype" "dataviewtype" "do" "dynload" "else"
     "end" "exception" "extern" "extype" "extval" "fn" "fnx" "fun"
-    "prfn" "prfun" "praxi" "castfn" "if" "in" "infix" "infixl"
+    "prfn" "prfun" "praxi" "castfn" "if" "ifcase" "in" "infix" "infixl"
     "infixr" "prefix" "postfix" "implmnt" "implement" "primplmnt" "primplement" "lam"
     "llam" "fix" "let" "local" "macdef" "macrodef" "nonfix" "overload"
     "of" "op" "rec" "scase" "sif" "sortdef" "sta" "stacst"
@@ -327,21 +329,26 @@
     "typedef"
     "abstype"
     "abst0ype"
+    "abst@ype"
     "absprop"
     "absview"
     "absvtype"
     "absviewtype"
     "absvt0ype"
+    "absvt@ype"
     "absviewt0ype"
+    "absviewt@ype"
     "sortdef"
     "staload"
+    "dynload"
+    "#include"
     ))
 
 (defun wrap-special-keyword (w)
   (concat "\\" w "\\>"))
 
 (defvar ats-keywords
-  (append (list "\\<\\(s\\)?case\\(\\+\\|\\*\\|-\\)?\\>")
+  (append (list "\\<\\(s\\)?\\(if\\)?case\\(\\+\\|\\*\\|-\\)?\\>")
           (mapcar 'wrap-word-keyword ats-word-keywords)
           (mapcar 'wrap-special-keyword ats-special-keywords)))
 
@@ -397,15 +404,17 @@
   (smie-prec2->grammar
    (smie-merge-prec2s
     (smie-bnf->prec2
-     '((exp ("if" exp "then" exp "else" exp)
-	    ("case+" exp "of" branches)
-	    ("case-" exp "of" branches)
-	    ("case" exp "of" branches)
-      ("let" decls "in" cmds "end")
-      (sexp)
-      ("begin" cmds "end")
-      ("try" exp "with" branches)
-      ("lam" sexp "=>" exp))
+     '((exp
+        ("if" exp "then" exp "else" exp)
+        ("case+" exp "of" branches)
+        ("ifcase" exp "of" branches)
+        ("case-" exp "of" branches)
+        ("case" exp "of" branches)
+        ("let" decls "in" cmds "end")
+        (sexp)
+        ("begin" cmds "end")
+        ("try" exp "with" branches)
+        ("lam" sexp "=>" exp))
        ;; "simple exp"s are the ones that can appear to the left of `handle'.
        (sexp (sexp ":" type) ("(" exps ")")
              (".<" exp ">.")
@@ -428,7 +437,7 @@
               ;; (decls "and" decls)
               (decls "withtype" decls)
               ;; (decls "infix" decls)
-	      ;; (decls "infixl" decls)
+              ;; (decls "infixl" decls)
               ;; (decls "infixr" decls)
               ;; (decls "nonfix" decls)
               ;; (decls "abstype" decls)
@@ -438,53 +447,60 @@
               ;; (decls "exception" decls)
               ;; (decls "fun" decls)
               ;; (decls "val" decls)
-	      ;; (decls "implement" decls)
-	      (decls "exception" decls)
-	      (decls "nonfix" decls)
-	      (decls "suffix" decls)
-	      (decls "prefix" decls)
-	      (decls "infixl" decls)
-	      (decls "infixr" decls)
-	      (decls "infix" decls)
-	      (decls "absviewt0ype" decls)
-	      (decls "absvt0ype" decls)
-	      (decls "absviewtype" decls)
-	      (decls "absvtype" decls)
-	      (decls "absview" decls)
-	      (decls "absprop" decls)
-	      (decls "abst0ype" decls)
-	      (decls "abstype" decls)
-	      (decls "dataviewtype" decls)
-	      (decls "datavtype" decls)
-	      (decls "dataview" decls)
-	      (decls "dataprop" decls)
-	      (decls "datatype" decls)
-	      (decls "type" decls)
-	      (decls "tkindef" decls)
-	      (decls "viewtypedef" decls)
-	      (decls "vtypedef" decls)
-	      (decls "viewdef" decls)
-	      (decls "propdef" decls)
-	      (decls "typedef" decls)
-	      (decls "praxi" decls)
-	      (decls "prfun" decls)
-	      (decls "prfn" decls)
-	      (decls "fun" decls)
-	      (decls "fnx" decls)
-	      (decls "fn" decls)
-	      (decls "prvar" decls)
-	      (decls "prval" decls)
-	      (decls "var" decls)
-	      (decls "val" decls)
-	      (decls "assume" decls)
-	      (decls "primplmnt" decls)
-	      (decls "primplement" decls)
-	      (decls "extern" decls)
-	      (decls "implmnt" decls)
-	      (decls "implement" decls)
-	      (decls "sortdef" decls)
-	      (decls "staload" decls)
-	      )
+              ;; (decls "implement" decls)
+              (decls "exception" decls)
+              (decls "nonfix" decls)
+              (decls "suffix" decls)
+              (decls "prefix" decls)
+              (decls "infixl" decls)
+              (decls "infixr" decls)
+              (decls "infix" decls)
+              (decls "absviewt0ype" decls)
+              (decls "absviewt@ype" decls)
+              (decls "absvt0ype" decls)
+              (decls "absvt@ype" decls)
+              (decls "absviewtype" decls)
+              (decls "absvtype" decls)
+              (decls "absview" decls)
+              (decls "absprop" decls)
+              (decls "abst0ype" decls)
+              (decls "abst@ype" decls)
+              (decls "abstype" decls)
+              (decls "dataviewtype" decls)
+              (decls "datavtype" decls)
+              (decls "dataview" decls)
+              (decls "dataprop" decls)
+              (decls "datatype" decls)
+              (decls "type" decls)
+              (decls "tkindef" decls)
+              (decls "viewtypedef" decls)
+              (decls "vtypedef" decls)
+              (decls "viewdef" decls)
+              (decls "propdef" decls)
+              (decls "typedef" decls)
+              (decls "praxi" decls)
+              (decls "prfun" decls)
+              (decls "prfn" decls)
+              (decls "fun" decls)
+              (decls "fnx" decls)
+              (decls "fn" decls)
+              (decls "prvar" decls)
+              (decls "prval" decls)
+              (decls "var" decls)
+              (decls "val" decls)
+              (decls "assume" decls)
+              (decls "primplmnt" decls)
+              (decls "primplement" decls)
+              (decls "extern" decls)
+              (decls "implmnt" decls)
+              (decls "implement" decls)
+              (decls "macdef" decls)
+              (decls "macrodef" decls)
+              (decls "sortdef" decls)
+              (decls "staload" decls)
+              (decls "dynload" decls)
+              (decls "#include" decls)
+              )
        (type (type "->" type)
              (type "*" type))
        (funbranches (sexp "d=" exp))
@@ -504,8 +520,12 @@
        ;;        "nonfix" "functor" "signature" "structure" "exception"
        ;;        "include" "sharing" "local")
        (assoc
+        "#include"
+        "dynload"
         "staload"
         "sortdef"
+        "macdef"
+        "macrodef"
         "implement"
         "implmnt"
         "extern"
@@ -536,12 +556,15 @@
         "dataviewtype"
         "abstype"
         "abst0ype"
+        "abst@ype"
         "absprop"
         "absview"
         "absvtype"
         "absviewtype"
         "absvt0ype"
+        "absvt@ype"
         "absviewt0ype"
+        "absviewt@ype"
         "infix"
         "infixr"
         "infixl"
@@ -619,49 +642,72 @@
                                 "implement"
                                 "implmnt")) -3))
     (`(:before . "=>") (if (smie-rule-parent-p "fn") 3 ))
-    (`(:before . "of") 1)
+    (`(:before . "of") (if (smie-rule-prev-p "d|") 4 1))
     ;; FIXME: pcase in Emacs<24.4 bumps into a bug if we do this:
     ;; (`(:before . ,(and `"|" (guard (smie-rule-prev-p "of")))) 1)
     (`(:before . "|") (if (smie-rule-prev-p "of") 1 (smie-rule-separator kind)))
-    (`(:before . ,(or `"|" `"d|" `";" `",")) (smie-rule-separator kind))
+    (`(:before . ,(or `"|" `"d|" `";" `",")) (smie-rule-separator kind
+                                                                  ))
     ;; Treat purely syntactic block-constructs as being part of their parent,
     ;; when the opening statement is hanging.
-    (`(:before . ,(or `"let")) (if (or
-                                    (smie-rule-parent-p "let"
-                                                        "if"
-                                                        "implement"
-                                                        "fun"
-                                                        "fn"
-                                                        "fnx"
-                                                        "val"
-                                                        "assume"
-                                                        "var"
-                                                        "prval"
-                                                        "prvar"
-                                                        "implement"
-                                                        "implmnt"
-                                                        "primplement"
-                                                        "primplmnt")
-                                    (smie-rule-hanging-p))
-                                   (if (smie-rule-parent-p "if")
-                                       `(column . ,(+ 2 (cdr (smie-rule-parent))))
-                                     (smie-rule-parent)
-                                       )
-                                 2))
+    (`(:before . ,(or `"let" `"begin" `"if" `"case" `"ifcase"))
+     (if (or
+          (smie-rule-parent-p "let"
+                              "begin"
+                              "if"
+                              "case"
+                              "ifcase"
+                              "implement"
+                              "fun"
+                              "fn"
+                              "fnx"
+                              "val"
+                              "assume"
+                              "var"
+                              "prval"
+                              "prvar"
+                              "implement"
+                              "implmnt"
+                              "primplement"
+                              "primplmnt"
+                              "staload"
+                              "dynload"
+                              "#include"
+                              "macdef"
+                              "macrodef")
+          (smie-rule-hanging-p))
+         (if (smie-rule-parent-p "if"
+                                 "let"
+                                 "begin"
+                                 "case"
+                                 "ifcase"
+                                 "fun"
+                                 "fn"
+                                 "fnx"
+                                 "implement"
+                                 "implmnt"
+                                 "primplement"
+                                 "primplmnt"
+                                 "macdef"
+                                 "macrodef")
+             `(column . ,(+ 2 (cdr (smie-rule-parent))))
+           (smie-rule-parent)
+           )
+       `(column . ,(+ 2 (cdr (smie-rule-parent))))))
     (`(:before . ,(or `"(" `"[" `"{")) ; "struct"? "sig"?
      (if (smie-rule-hanging-p) (smie-rule-parent)
        (if (smie-rule-prev-p "=of") 4 (smie-rule-parent))))
     ;; Treat if ... else if ... as a single long syntactic construct.
     ;; Similarly, treat fn a => fn b => ... as a single construct.
-    (`(:before . ,(or `"if"))
+    (`(:before . ,(or `"if" `"case" "ifcase"))
      (if
          (and (not (smie-rule-bolp))
               (smie-rule-prev-p (if (equal token "if") "else" "=>") "d=")
               (smie-rule-parent))
-         t (if (smie-rule-parent-p "fun" "fn" "fnx" "prfun" "prfn")
-               `(column . ,(+ 2 (cdr (smie-rule-parent))))
+         nil (if (smie-rule-parent-p "fun" "fn" "fnx" "prfun" "prfn")
+               (smie-rule-parent);; `(column . ,(+ 2 (cdr (smie-rule-parent))))
              (if (smie-rule-parent-p "let")
-                 nil (smie-rule-parent)))))
+                 (smie-rule-parent) nil))))
     (`(:before . "and")
      ;; FIXME: maybe "and" (c|sh)ould be handled as an smie-separator.
      (cond
@@ -686,12 +732,15 @@
         "primplement"
         "primplmnt"
         "praxi"
+        "macdef"
+        "macrodef"
         )
        2)))
     (`(:before . "withtype") 0)
     (`(:before . "d=")
      (cond
       ((smie-rule-parent-p
+        "typedef"
         "datatype"
         "dataprop"
         "dataview"
@@ -772,8 +821,8 @@ Assumes point is right before the | symbol."
 	   (list
 	    "|" "of" "in" "datatype"
 	    "dataprop" "dataview" "datavtype" "dataviewtype" "and" "assume"
-	    "exception" "abstype" "abst0ype" "absprop" "absview"
-	    "absvtype" "absviewtype" "absvt0ype" "absviewt0ype" "infix"
+	    "exception" "abstype" "abst0ype" "abst@ype" "absprop" "absview"
+	    "absvtype" "absviewtype" "absvt0ype" "absvt@ype" "absviewt0ype" "absviewt@ype" "infix"
 	    "infixr" "infixl" "prefix" "suffix" "nonfix" "local" "val"
 	    "var" "prval" "prvar" "fun" "fn" "fnx" "prfun" "prfn" "praxi")
 	   ))
@@ -858,12 +907,12 @@ Assumes point is right before the | symbol."
 (define-derived-mode ats-mode fundamental-mode "ATS2"
   "Major mode to edit ATS2 source code."
   (set (make-local-variable 'font-lock-defaults)
-       '(ats-font-lock-keywords nil nil ((?_ . "w") (?= . "_") ) nil
+       '(ats-font-lock-keywords nil nil ((?_ . "w") (?= . "_") (?@ . "w")) nil
          (font-lock-syntactic-keywords . ats-font-lock-syntactic-keywords)
          (font-lock-mark-block-function . ats-font-lock-mark-block)))
-  (setq-local comment-start "(*")
-  (setq-local comment-continue  " *")
-  (setq-local comment-end "*)")
+  (setq-local comment-start "// ")
+  (setq-local comment-continue  "// ")
+  (setq-local comment-end "")
   ;; (setq indent-line-function 'tab-to-tab-stop)
   (smie-setup ats-smie-grammar #'ats-smie-rules
               :backward-token #'ats-smie-backward-token
