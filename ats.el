@@ -321,6 +321,7 @@
     "primplmnt"
     "and"
     "datatype"
+    "datasort"
     "dataprop"
     "dataview"
     "datavtype"
@@ -469,6 +470,7 @@
               (decls "dataviewtype" decls)
               (decls "datavtype" decls)
               (decls "dataview" decls)
+              (decls "datasort" decls)
               (decls "dataprop" decls)
               (decls "datatype" decls)
               (decls "type" decls)
@@ -551,6 +553,7 @@
         "type"
         "datatype"
         "dataprop"
+        "datasort"
         "dataview"
         "datavtype"
         "dataviewtype"
@@ -617,6 +620,7 @@
     (`(:elem . basic) ats-indent-separator-outdent)
     (`(:elem . args)  ats-indent-args)
     (`(:elem . empty-line-token) t)
+    (`(:before . ,(or `"staload" `"dynload" `"#include")) t)
     (`(:list-intro . "fun") t)
     (`(:list-intro . "lam") t)
     (`(:list-intro . "llam") t)
@@ -670,9 +674,6 @@
                               "implmnt"
                               "primplement"
                               "primplmnt"
-                              "staload"
-                              "dynload"
-                              "#include"
                               "macdef"
                               "macrodef")
           (smie-rule-hanging-p))
@@ -712,6 +713,7 @@
      ;; FIXME: maybe "and" (c|sh)ould be handled as an smie-separator.
      (cond
       ((smie-rule-parent-p "datatype"
+                           "datasort"
                            "dataprop"
                            "dataview"
                            "datavtype"
@@ -742,6 +744,7 @@
       ((smie-rule-parent-p
         "typedef"
         "datatype"
+        "datasort"
         "dataprop"
         "dataview"
         "datavtype"
@@ -820,7 +823,7 @@ Assumes point is right before the | symbol."
            ;;   "infixr" "nonfix" "local" "val" "fun" "fn" "fnx" "prfun" "prfn" "praxi")
 	   (list
 	    "|" "of" "in" "datatype"
-	    "dataprop" "dataview" "datavtype" "dataviewtype" "and" "assume"
+	    "datasort" "dataprop" "dataview" "datavtype" "dataviewtype" "and" "assume"
 	    "exception" "abstype" "abst0ype" "abst@ype" "absprop" "absview"
 	    "absvtype" "absviewtype" "absvt0ype" "absvt@ype" "absviewt0ype" "absviewt@ype" "infix"
 	    "infixr" "infixl" "prefix" "suffix" "nonfix" "local" "val"
